@@ -22,7 +22,7 @@ def get_wrapped_key(dek_str: str):
         selected_kek = ""
         for kek in keks:
             consulta = bd[bd['KEK'] == kek]
-            if (len(consulta) < 2) and (dek in consulta):
+            if (len(consulta) < 2) and str(dek)==consulta['DEK'].values[0]:
                 selected_kek = kek
                 break
         if not selected_kek:
