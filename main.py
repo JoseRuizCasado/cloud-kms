@@ -3,6 +3,7 @@ import pandas as pd
 from fastapi import FastAPI
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
+import base64
 import numpy as np
 
 
@@ -17,35 +18,60 @@ app = FastAPI()
 def get_wrapped_key(dek_str: str):
     dek = dek_str.encode()
     bd = pd.read_csv('bd.csv')
+    selected_kek = ""
     if len(bd) > 0:
         keks = np.unique(bd['KEK'].tolist())
-        selected_kek = ""
         for kek in keks:
             consulta = bd[bd['KEK'] == kek]
-            if (len(consulta) < 2) and str(dek)==consulta['DEK'].values[0]:
-                selected_kek = kek
+            if (len(consulta) < 4):
+                selected_kek = base64.urlsafe_b64decode(kek.tolist().encode())
                 break
         if not selected_kek:
-            fer1 = Fernet.generate_key()
-            fer2 = Fernet.generate_key()
-            d = {'KEK': [fer1], 'DEK': [fer2]}
-            df = pd.DataFrame(data=d)
-            bd.append(df)
-            selected_kek = fer2
-            df.to_csv('bd.csv', mode='a', header=False)
+            selected_kek = Fernet.generate_key()
             pass
     else:
-        # Crear KEK
-        fer1 = Fernet.generate_key()
-        fer2 = Fernet.generate_key()
-        d = {'KEK': [fer1], 'DEK': [fer2]}
-        df = pd.DataFrame(data=d)
-        bd.append(df)
-        selected_kek = fer2
-        df.to_csv('bd.csv', mode='a', header=False)
+        selected_kek = Fernet.generate_key()
         pass
+    fernet = Fernet(selected_kek)
+    new_dek = fernet.encrypt(dek)
+    d = {'KEK': [selected_kek], 'DEK': [new_dek]}
+    df = pd.DataFrame(data=d)
+    df.to_csv('bd.csv', mode='a', header=False)
+    return {"DEK": new_dek}
 
-    return {"hello world": selected_kek}
+
+# def get_wrapped_key(dek_str: str):
+#     dek = dek_str.encode()
+#     bd = pd.read_csv('bd.csv')
+#     if len(bd) > 0:
+#         keks = np.unique(bd['KEK'].tolist())
+#         selected_kek = ""
+#         for kek in keks:
+#             consulta = bd[bd['KEK'] == kek]
+#             if (len(consulta) < 2) and str(dek)==consulta['DEK'].values[0]:
+#                 selected_kek = kek
+#                 break
+#         if not selected_kek:
+#             fer1 = Fernet.generate_key()
+#             fer2 = Fernet.generate_key()
+#             d = {'KEK': [fer1], 'DEK': [fer2]}
+#             df = pd.DataFrame(data=d)
+#             bd.append(df)
+#             selected_kek = fer2
+#             df.to_csv('bd.csv', mode='a', header=False)
+#             pass
+#     else:
+#         # Crear KEK
+#         fer1 = Fernet.generate_key()
+#         fer2 = Fernet.generate_key()
+#         d = {'KEK': [fer1], 'DEK': [fer2]}
+#         df = pd.DataFrame(data=d)
+#         bd.append(df)
+#         selected_kek = fer2
+#         df.to_csv('bd.csv', mode='a', header=False)
+#         pass
+#
+#     return {"hello world": selected_kek}
 
 
 if __name__ == "__main__":
