@@ -32,7 +32,7 @@ def get_wrapped_key(dek_str: str):
             df = pd.DataFrame(data=d)
             bd.append(df)
             selected_kek = fer2
-            bd.to_csv('bd.csv')
+            df.to_csv('bd.csv', mode='a', header=False)
             pass
     else:
         # Crear KEK
@@ -42,7 +42,7 @@ def get_wrapped_key(dek_str: str):
         df = pd.DataFrame(data=d)
         bd.append(df)
         selected_kek = fer2
-        bd.to_csv('bd.csv')
+        df.to_csv('bd.csv', mode='a', header=False)
         pass
 
     return {"hello world": selected_kek}
