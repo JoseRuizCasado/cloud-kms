@@ -23,18 +23,19 @@ def get_wrapped_key(dek_str: str):
         keks = np.unique(bd['KEK'].tolist())
         for kek in keks:
             consulta = bd[bd['KEK'] == kek]
-            if (len(consulta) < 4):
-                selected_kek = base64.urlsafe_b64decode(kek.tolist().encode())
+            if len(consulta) < 4:
+                selected_kek = str(kek).encode()
                 break
+
         if not selected_kek:
-            selected_kek = Fernet.generate_key()
-            pass
+            selected_kek = Fernet()
+
     else:
         selected_kek = Fernet.generate_key()
-        pass
+
     fernet = Fernet(selected_kek)
     new_dek = fernet.encrypt(dek)
-    d = {'KEK': [selected_kek], 'DEK': [new_dek]}
+    d = {'KEK': [selected_kek.decode()], 'DEK': [new_dek.decode()]}
     df = pd.DataFrame(data=d)
     df.to_csv('bd.csv', mode='a', header=False)
     return {"DEK": new_dek}
