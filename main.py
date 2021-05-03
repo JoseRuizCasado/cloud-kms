@@ -23,12 +23,13 @@ def get_wrapped_key(dek_str: str):
         keks = np.unique(bd['KEK'].tolist())
         for kek in keks:
             consulta = bd[bd['KEK'] == kek]
+            print(consulta)
             if len(consulta) < 4:
                 selected_kek = str(kek).encode()
                 break
 
         if not selected_kek:
-            selected_kek = Fernet()
+            selected_kek = Fernet.generate_key()
 
     else:
         selected_kek = Fernet.generate_key()
