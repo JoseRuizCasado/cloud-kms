@@ -41,6 +41,16 @@ def get_wrapped_key(dek_str: str):
     df.to_csv('bd.csv', mode='a', header=False)
     return {"DEK": new_dek}
 
+@app.get("/get-key/{dek_str}")
+def get_key(dek_str: str):
+    dek = dek_str
+    bd = pd.read_csv('bd.csv')
+    consulta = bd[bd['DEK'] == dek]
+    DEK = consulta['DEK'].tolist().pop().encode()
+    KEK = consulta['KEK'].tolist().pop().encode()
+    fernet = Fernet(KEK)
+    org_dek = fernet.decrypt(DEK)
+    return {"DEK": org_dek}
 
 # def get_wrapped_key(dek_str: str):
 #     dek = dek_str.encode()
