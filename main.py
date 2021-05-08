@@ -6,6 +6,8 @@ from pydantic import BaseModel
 import base64
 import numpy as np
 
+DATABASE_CONNECTION = 'bd.csv'
+
 
 class DEK(BaseModel):
     dek_str: str
@@ -17,7 +19,7 @@ app = FastAPI()
 @app.get("/wrapped-key/{dek_str}")
 def get_wrapped_key(dek_str: str):
     dek = dek_str.encode()
-    bd = pd.read_csv('bd.csv')
+    bd = pd.read_csv(DATABASE_CONNECTION)
     selected_kek = ""
     if len(bd) > 0:
         keks = np.unique(bd['KEK'].tolist())
@@ -41,16 +43,18 @@ def get_wrapped_key(dek_str: str):
     df.to_csv('bd.csv', mode='a', header=False)
     return {"DEK": new_dek}
 
+
 @app.get("/get-key/{dek_str}")
 def get_key(dek_str: str):
     dek = dek_str
-    bd = pd.read_csv('bd.csv')
+    bd = pd.read_csv(DATABASE_CONNECTION)
     consulta = bd[bd['DEK'] == dek]
-    DEK = consulta['DEK'].tolist().pop().encode()
-    KEK = consulta['KEK'].tolist().pop().encode()
+    DEK = consulta['DEK'].values[0].encode()
+    KEK = consulta['KEK'].values[0].encode()
     fernet = Fernet(KEK)
     org_dek = fernet.decrypt(DEK)
     return {"DEK": org_dek}
+
 
 # def get_wrapped_key(dek_str: str):
 #     dek = dek_str.encode()
